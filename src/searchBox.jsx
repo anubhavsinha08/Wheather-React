@@ -3,14 +3,16 @@ import Button from "@mui/material/Button";
 import { useState } from "react";
 import './SearchBox.css'
 
-export default function SearchBox() {
-    let[city,setCity]= useState("")
+export default function SearchBox({updateWeatherInfo}) {
+    let[city,setCity]= useState("");
+    let[error,setError]= useState(false);
 
     let ApiUrl="https://api.openweathermap.org/data/2.5/weather";
     let ApiKey="099b2c0580aba67afad0502ae9ce0a21";
 
     let getWeatherInfo=async()=>{
-       let resopnse= await fetch(`${ApiUrl}?q=${city}&appid=${ApiKey}&units=metric`);
+       try{
+        let resopnse= await fetch(`${ApiUrl}?q=${city}&appid=${ApiKey}&units=metric`);
        let jsonResponse = await resopnse.json();
        console.log(jsonResponse);
 
@@ -24,6 +26,10 @@ export default function SearchBox() {
         weather: jsonResponse.weather[0].description
        }
        console.log(result);
+       return result;
+       }catch(err){
+        throw err;
+       }
     }
 
 
@@ -31,11 +37,17 @@ export default function SearchBox() {
         setCity(event.target.value)
     }
 
-    let handleSubmiit=(event)=>{
-        event.preventDefault();
+    let handleSubmiit=async(event)=>{
+        try{
+          event.preventDefault();
         console.log(city);
         setCity("");
-        getWeatherInfo();
+        let updateData = await getWeatherInfo();
+        updateWeatherInfo(updateData)
+        }catch(err){
+          setError("No such place exists in our Api");
+        }
+
     }
   return (
     <div className="SearchBox">
@@ -44,6 +56,7 @@ export default function SearchBox() {
         <TextField id="city" label="City Name" variant="outlined" required value={city} onChange={handleChange}/>
         
         <Button variant="outlined" type="submit" className="submitBtn">Submit</Button>
+        {error && <p style={{color:"red"}}>No!!! such place exists in our Api</p>}
       </form>
     </div>
   );
